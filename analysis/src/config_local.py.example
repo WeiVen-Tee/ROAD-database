@@ -1,0 +1,6 @@
+# Copy this file to config_local.py (gitignored) and fill in your local path.
+# Only used as a fallback if collection/src/config_local.py doesn't already
+# define CIF_DIR — analysis normally inherits CIF_DIR from collection's config.
+# Alternatively, set the STRUCTURE_CIF_DIR environment variable instead.
+
+CIF_DIR = '/path/to/your/PDB/assembly/cifs/'

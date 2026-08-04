@@ -1,0 +1,36 @@
+FIELD DESCRIPTIONS — nonredundant_sites_annotated_enriched.csv
+===============================================================================
+
+27,164 rows x 20 columns (one row per non-redundant ligand-binding site)
+
+-------------------------------------------------------------------------------
+IDENTIFIERS
+-------------------------------------------------------------------------------
+ID                    — Unique site identifier, formed as source_pdb + "_" + chain + residue number + ligand code (e.g. "11BA_B126UPA").
+source_pdb            — Four-character PDB entry the site was extracted from (e.g. "11BA").
+ligand_code           — The bound ligand as Chain.Resnum:CCD, where CCD is the 3-character PDB Chemical Component Dictionary code (e.g. "B.126:UPA").
+uniprot_ac            — UniProt accession of the protein the site belongs to (e.g. "P00669").
+
+-------------------------------------------------------------------------------
+SITE DEFINITION AND CLASSIFICATION
+-------------------------------------------------------------------------------
+binding_site          — Semicolon-separated list of the protein residues forming the ligand-binding site, as Chain.Resnum.
+functional_site_res   — Semicolon-separated list of the protein's UniProt-annotated Active-site and DNA-binding residues, mapped onto this PDB entry's numbering.
+site_category         — "orthosteric" if min_dist <= 5 A, otherwise "allosteric".
+min_dist              — Shortest heavy-atom distance in angstroms between any binding-site residue and any functional-site residue.
+median_dist           — Median.
+avg_dist              — Mean.
+nearby_ions           — Crystallographic ions found within 4.5 A of the ligand, as Chain.Resnum:CCD.
+
+-------------------------------------------------------------------------------
+PROTEIN ANNOTATION
+-------------------------------------------------------------------------------
+protein_name_uniprot  — Protein name from UniProt.
+protein_name_pdb      — Protein name as given in the PDB entry's own header.
+chains_in_site        — Which chains of the assembly contribute residues to this site, most-contributing first.
+organism              — Scientific name of the source organism, from the RCSB REST API (e.g. "Bos taurus").
+pdb_resolution        — Crystallographic resolution of the PDB entry in angstroms.
+n_chains              — Number of protein chains in the biological assembly.
+total_aa              — Total number of amino-acid residues across all chains of the assembly.
+cath_superfamily      — CATH superfamily identifier for the protein fold (e.g. "3.10.130.10"); empty for rows where no CATH assignment exists.
+ec_number             — Enzyme Commission number(s), semicolon-separated if more than one.

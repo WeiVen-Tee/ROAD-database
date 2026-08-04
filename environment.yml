@@ -1,0 +1,27 @@
+# Conda environment for the collection and analysis pipelines
+#   conda env create -f environment.yml
+#   conda activate ROAD-database
+#
+# pdbe-arpeggio (Interaction Contacts stage) and its openbabel dependency have no
+# conda package for Python 3.14, so both are installed via pip below.
+name: ROAD-database
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.14
+  - numpy=2.3
+  - pandas=3.0
+  - scipy=1.16
+  - gemmi=0.7
+  - rdkit=2025.09
+  - requests=2.32
+  - rapidfuzz=3.14
+  - natsort=8.4
+  - urllib3=2.6
+  - freesasa-c=2.1   # provides the `freesasa` CLI used by analysis's Site Geometry stage
+  - foldseek=10.941cd33   # provides the `foldseek` CLI used by the cluster stage's structural clustering
+  - pip
+  - pip:
+    - pdbe-arpeggio==1.4.4
+    - openbabel==3.2.0

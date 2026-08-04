@@ -1,0 +1,129 @@
+FIELD DESCRIPTIONS — site_ligand_features.csv
+===============================================================================
+
+27,164 rows x 91 columns (one row per non-redundant ligand-binding site)
+
+Row IDs are identical to nonredundant_sites_annotated_enriched.csv
+
+-------------------------------------------------------------------------------
+CARRIED OVER FROM COLLECTION (columns 1-20)
+-------------------------------------------------------------------------------
+ID                    — Unique site identifier (source_pdb + "_" + chain + residue number + ligand code, e.g. "11BA_B126UPA").
+source_pdb            — Four-character PDB entry the site was extracted from.
+ligand_code           — Bound ligand as Chain.Resnum:CCD.
+canonical_smiles      — RDKit canonical SMILES for the ligand, resolved from its CCD code.
+binding_site          — Semicolon-separated Chain.Resnum list of residues lining the site.
+functional_site_res   — Semicolon-separated Chain.Resnum list of UniProt-annotated Active-site / DNA-binding residues.
+site_category         — "orthosteric" (min_dist <= 5 A) or "allosteric".
+min_dist              — Shortest distance in angstroms from the site to a functional residue.
+median_dist           — Median.
+avg_dist              — Mean.
+nearby_ions           — Crystallographic ions within 4.5 A of the ligand, as Chain.Resnum:CCD.
+uniprot_ac            — UniProt accession of the protein.
+protein_name_uniprot  — Protein name from UniProt.
+protein_name_pdb      — Protein name from the PDB entry header.
+organism              — Scientific name of the source organism.
+pdb_resolution        — Crystallographic resolution in angstroms.
+n_chains              — Number of protein chains in the biological assembly.
+total_aa              — Total amino-acid residues across the assembly.
+cath_superfamily      — CATH superfamily identifier.
+ec_number             — Enzyme Commission number(s).
+
+-------------------------------------------------------------------------------
+LIGAND CATEGORY
+-------------------------------------------------------------------------------
+is_exclusive          — True if this ligand's CCD code is found in only one site category across the whole dataset, i.e. it is never both orthosteric and allosteric.
+
+-------------------------------------------------------------------------------
+LIGAND CHARACTERISTICS
+-------------------------------------------------------------------------------
+ExactMolWt            — Exact molecular weight of the ligand in daltons.
+HeavyAtomCount        — Number of non-hydrogen atoms; the denominator for every *_per_HA column.
+MolLogP               — Crippen estimate of the octanol/water partition coefficient (lipophilicity).
+logP_per_HA           — MolLogP divided by heavy-atom count.
+LabuteASA             — Labute's approximate accessible surface area of the ligand, in square angstroms.
+MolVolume             — Molecular volume in cubic angstroms, computed from an embedded 3D conformer; NaN if embedding failed.
+ASA_per_Volume        — LabuteASA divided by MolVolume; higher values indicate a flatter or more extended, less globular shape.
+
+NumRotatableBonds     — Count of freely rotatable single bonds.
+NumRotatableBonds_per_HA — NumRotatableBonds divided by heavy-atom count.
+FractionAromaticAtoms — Fraction of heavy atoms belonging to an aromatic ring.
+FractionCSP3          — Fraction of carbon atoms that are sp3-hybridised.
+QED                   — Quantitative Estimate of Drug-likeness, in [0, 1]; higher is more drug-like.
+
+TPSA                  — Topological polar surface area in square angstroms.
+TPSA_per_HA           — TPSA divided by heavy-atom count.
+NumHDonors            — Number of hydrogen-bond donor atoms.
+HBD_per_HA            — NumHDonors divided by heavy-atom count.
+NumHAcceptors         — Number of hydrogen-bond acceptor atoms.
+HBA_per_HA            — NumHAcceptors divided by heavy-atom count.
+
+RingCount             — Total number of rings in the ligand.
+RingCount_per_HA      — RingCount divided by heavy-atom count.
+NumAromaticRings_per_HA — Number of aromatic rings divided by heavy-atom count.
+NumAliphaticRings     — Number of non-aromatic rings.
+NumAliphaticRings_per_HA — NumAliphaticRings divided by heavy-atom count.
+NumSaturatedRings     — Number of fully saturated rings.
+NumSaturatedRings_per_HA — NumSaturatedRings divided by heavy-atom count.
+NumAromaticHeterocycles — Number of aromatic rings containing at least one non-carbon atom.
+NumAromaticHeterocycles_per_HA — NumAromaticHeterocycles divided by heavy-atom count.
+NumRingSystems        — Number of connected ring systems, counting a fused polycyclic system as one.
+NumRingSystems_per_HA — NumRingSystems divided by heavy-atom count.
+NumRings5             — Number of five-membered rings.
+NumRings5_per_HA      — NumRings5 divided by heavy-atom count.
+NumRings6             — Number of six-membered rings.
+NumRings6_per_HA      — NumRings6 divided by heavy-atom count.
+largest_ring_size     — Number of atoms in the ligand's largest ring; 0 if acyclic.
+
+-------------------------------------------------------------------------------
+SITE GEOMETRY AND COMPOSITION
+-------------------------------------------------------------------------------
+site_size             — Number of binding-site residues.
+mean_num_neighbors    — Mean number of residues within 4.5 A heavy-atom distance of each site residue; a neighbourhood-density proxy for pocket curvature.
+rSASA_apo             — Mean relative solvent-accessible surface area of the site residues with all ligands and waters removed, in [0, 1]
+rSASA_bound           — The same mean with ligands present, so the bound ligand occludes the surface.
+frac_surface_apo      — Fraction of site residues with rSASA_apo > 0.25, i.e. surface-exposed in the unliganded state.
+frac_intermediate_apo — Fraction of site residues with 0 < rSASA_apo <= 0.25, i.e. partially buried.
+Charged               — Fraction of site residues that are K, R, D or E.
+Polar uncharged       — Fraction of site residues that are S, T, N, Q, C, H or Y.
+Hydrophobic aliphatic — Fraction of site residues that are G, A, V, I, L, M or P.
+Hydrophobic aromatic  — Fraction of site residues that are F or W.
+
+-------------------------------------------------------------------------------
+LIGAND FUNCTIONAL GROUPS
+-------------------------------------------------------------------------------
+fr_sulfonamd          — Number of sulfonamide groups in the ligand.
+fr_sulfonamd_per_HA   — fr_sulfonamd divided by heavy-atom count.
+fr_piperzine          — Number of piperazine rings.
+fr_piperzine_per_HA   — fr_piperzine divided by heavy-atom count.
+fr_methoxy            — Number of methoxy groups.
+fr_methoxy_per_HA     — fr_methoxy divided by heavy-atom count.
+fr_halogen            — Number of halogen atoms.
+fr_halogen_per_HA     — fr_halogen divided by heavy-atom count.
+fr_aniline            — Number of aniline (aromatic amine) groups.
+fr_aniline_per_HA     — fr_aniline divided by heavy-atom count.
+fr_nitro_arom         — Number of nitro groups attached to an aromatic ring.
+fr_nitro_arom_per_HA  — fr_nitro_arom divided by heavy-atom count.
+fr_ether              — Number of ether linkages.
+fr_ether_per_HA       — fr_ether divided by heavy-atom count.
+fr_Ar_COO             — Number of aromatic carboxylic acid groups.
+fr_Ar_COO_per_HA      — fr_Ar_COO divided by heavy-atom count.
+fr_amide              — Number of amide groups.
+fr_amide_per_HA       — fr_amide divided by heavy-atom count.
+has_metal             — True if the ligand contains a metal atom; NaN where the ligand could not be parsed.
+
+-------------------------------------------------------------------------------
+LIGAND 3D SHAPE
+-------------------------------------------------------------------------------
+NPR1                  — First normalised principal moment ratio (I1/I3), in [0, 1]; NaN if 3D embedding failed.
+NPR2                  — Second normalised principal moment ratio (I2/I3), in [0, 1].
+
+-------------------------------------------------------------------------------
+PROTEIN-LIGAND INTERACTIONS
+-------------------------------------------------------------------------------
+
+frac_hydrophobic      — Fraction of the site's contacts classified as hydrophobic.
+frac_ionic            — Fraction classified as ionic (charge-charge).
+frac_aromatic         — Fraction classified as aromatic (ring stacking and related).
+frac_hbond            — Fraction classified as hydrogen bonds, including weak hydrogen bonds.
+frac_polar            — Fraction classified as polar, including weak polar contacts.

@@ -1,0 +1,37 @@
+# OS / editor junk
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Backup files
+*.bak*
+
+# Logs
+collection/log/
+analysis/logs/
+
+# Regenerable outputs
+collection/result/
+analysis/data/
+analysis/figures/
+
+# Scratch and manuscript
+/tmp/
+manuscript/
+
+# collection's enriched-sites CSV, copied in as analysis's input. The directory
+# stays tracked via .gitkeep so a fresh clone has somewhere to put it; the last
+# rule covers the convenience copy some scripts keep at analysis/ root.
+analysis/input_dataset/*.csv
+analysis/input_dataset/*.p
+analysis/nonredundant_sites_annotated_enriched.csv
+
+# Third-party datasets
+analysis/ccd/
+collection/data/*
+!collection/data/*.txt
+
+# Machine-specific local config overrides
+collection/src/config_local.py
+analysis/src/config_local.py
