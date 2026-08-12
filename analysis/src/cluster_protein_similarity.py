@@ -9,8 +9,8 @@ ALL rows and allosteric-only rows are clustered independently, so cluster IDs
 are file-local: cluster_struc=3 means different things in clusters_all.csv and
 clusters_allosteric.csv.
 
-Foldseek defaults here: --cluster-mode 1
-(connected-component) with -c 0.8 / --cov-mode 0 / -e 0.01. See --help to override.
+Foldseek defaults here: --cluster-mode 1 (connected-component) with -c 0.8 /
+--cov-mode 0 / -e 0.01 / --tmscore-threshold 0.5. See --help to override.
 
 SCOP2 and CATH annotate rows for the largest_clusters.csv breakdown and never
 gate clustering.
@@ -341,8 +341,9 @@ _CIF_STEM_SUFFIX = '-assembly1'  # member IDs from foldseek have the extension s
 
 def cluster_by_structure(scope_df: pd.DataFrame, foldseek_bin: str, cif_dir: str,
                           coverage: float | None, cov_mode: int | None,
-                          tmscore_threshold: float | None, evalue: float | None,
-                          cluster_mode: int, threads: int | None, scope_name: str) -> UnionFind:
+                          tmscore_threshold: float | None, tmscore_threshold_mode: int | None,
+                          evalue: float | None, cluster_mode: int, threads: int | None,
+                          scope_name: str) -> UnionFind:
     """Union rows whose chains fall in the same Foldseek structural clusters.
 
     Foldseek splits each multi-chain assembly file into one database entry per
@@ -354,8 +355,8 @@ def cluster_by_structure(scope_df: pd.DataFrame, foldseek_bin: str, cif_dir: str
 
     cluster_mode=1 additionally requires --single-step-clustering 1, added
     automatically — easy-cluster's cascaded workflow hard-errors without it.
-    coverage/cov_mode/tmscore_threshold/evalue/threads are passed through only
-    when not None, so Foldseek's own defaults apply otherwise.
+    The filter arguments are passed through only when not None, so Foldseek's
+    own defaults apply otherwise.
 
     Returns a UnionFind over range(len(scope_df)).
     """
@@ -399,6 +400,8 @@ def cluster_by_structure(scope_df: pd.DataFrame, foldseek_bin: str, cif_dir: str
             cmd.extend(['--cov-mode', str(cov_mode)])
         if tmscore_threshold is not None:
             cmd.extend(['--tmscore-threshold', str(tmscore_threshold)])
+        if tmscore_threshold_mode is not None:
+            cmd.extend(['--tmscore-threshold-mode', str(tmscore_threshold_mode)])
         if evalue is not None:
             cmd.extend(['-e', str(evalue)])
         if threads is not None:
@@ -480,8 +483,9 @@ _CLUSTER_MODE_LABELS = {0: 'greedy-set-cover', 1: 'connected-component', 2: 'gre
 
 def cluster_scope(scope_df: pd.DataFrame, scope_name: str, foldseek_bin: str, cif_dir: str,
                    struct_coverage: float | None, struct_cov_mode: int | None,
-                   tmscore_threshold: float | None, evalue: float | None,
-                   struct_cluster_mode: int, threads: int | None) -> pd.DataFrame:
+                   tmscore_threshold: float | None, tmscore_threshold_mode: int | None,
+                   evalue: float | None, struct_cluster_mode: int,
+                   threads: int | None) -> pd.DataFrame:
     """Cluster one scope (ALL or allosteric-only), one output row per input row."""
     scope_df = scope_df.reset_index(drop=True)
     n = len(scope_df)
@@ -489,6 +493,7 @@ def cluster_scope(scope_df: pd.DataFrame, scope_name: str, foldseek_bin: str, ci
 
     uf = cluster_by_structure(scope_df, foldseek_bin, cif_dir, struct_coverage,
                                struct_cov_mode, tmscore_threshold=tmscore_threshold,
+                               tmscore_threshold_mode=tmscore_threshold_mode,
                                evalue=evalue, cluster_mode=struct_cluster_mode,
                                threads=threads, scope_name=scope_name)
 
@@ -601,38 +606,27 @@ def main() -> None:
     parser.add_argument('--foldseek-bin', default='foldseek',
                         help='Path to foldseek executable (default: foldseek on PATH)')
     parser.add_argument('--cif-dir', default=config.CIF_DIR,
-                        help='Directory of {PDB_ID}-assembly1.cif files for the Foldseek '
-                             'structural axis (default: config.CIF_DIR). Rows whose source_pdb '
-                             'has no file here get a singleton — never dropped.')
+                        help='Directory of {PDB_ID}-assembly1.cif files (default: config.CIF_DIR). '
+                             'Rows with no file here become singletons, never dropped.')
     parser.add_argument('--struct-coverage', type=float, default=0.8,
-                        help='foldseek -c coverage (default: 0.8, paired with --struct-cov-mode '
-                             '0 for bidirectional coverage — prevents a short, well-superimposed '
-                             'local fragment, e.g. a shared cofactor-binding motif, from counting '
-                             'as a match on its own. Pass 0.0 to restore foldseek\'s own permissive '
-                             'default of no coverage filter.)')
+                        help='foldseek -c coverage (default: 0.8). Bounds alignment span, not '
+                             'quality — see --tmscore-threshold.')
     parser.add_argument('--struct-cov-mode', type=int, default=0,
                         help='foldseek --cov-mode (default: 0, i.e. coverage of query AND target)')
     parser.add_argument('--struct-cluster-mode', type=int, default=1,
-                        help='foldseek --cluster-mode (default: 1, connected-component — chosen '
-                             'after an empirical CATH-purity parameter sweep, '
-                             'that scored --cluster-mode 0/1 across coverage/E-value levels by CATH '
-                             '2-level purity of each condition\'s largest clusters. '
-                             '--single-step-clustering 1 is applied automatically whenever this is 1, '
-                             'since foldseek\'s cascaded easy-cluster workflow requires it for '
-                             'connected-component mode. Pass 0 to restore the previous greedy '
-                             'set-cover default.)')
+                        help='foldseek --cluster-mode (default: 1, connected-component; 0 for '
+                             'greedy set-cover). --single-step-clustering 1 is added when this is 1.')
     parser.add_argument('--evalue', type=float, default=0.01,
-                        help='foldseek -e E-value cutoff (default: 0.01, stricter than foldseek\'s '
-                             'own permissive default of 10.0). Pass 10.0 to restore that default.')
-    parser.add_argument('--tmscore-threshold', type=float, default=None,
-                        help='foldseek --tmscore-threshold (default: unset, foldseek uses its own '
-                             'default of 0.0 — i.e. no TM-score filter. --struct-coverage and '
-                             '--evalue are this script\'s chosen filters instead; set this '
-                             'explicitly to additionally filter on TM-score.)')
+                        help='foldseek -e E-value cutoff (default: 0.01, foldseek\'s own is 10.0)')
+    parser.add_argument('--tmscore-threshold', type=float, default=0.5,
+                        help='foldseek --tmscore-threshold (default: 0.5, foldseek\'s own is 0.0). '
+                             'The alignment-quality filter; 0.0 disables it.')
+    parser.add_argument('--tmscore-threshold-mode', type=int, default=0,
+                        help='foldseek --tmscore-threshold-mode: normalise TM by 0 alignment, '
+                             '1 query, or 2 target length (default: 0)')
     parser.add_argument('--threads', type=int, default=None,
-                        help='Threads for foldseek (default: unset, foldseek uses its own '
-                             'default of all available cores). Pass --threads 1 for a stronger '
-                             'cross-run reproducibility guarantee at the cost of speed.')
+                        help='Threads for foldseek (default: unset, foldseek uses all cores). '
+                             '--threads 1 is more reproducible across runs.')
     cli_utils.add_common_args(parser, force=True)
     args = parser.parse_args()
 
@@ -693,12 +687,14 @@ def main() -> None:
 
     clusters_all = cluster_scope(
         df_all, 'ALL', args.foldseek_bin, args.cif_dir,
-        args.struct_coverage, args.struct_cov_mode, args.tmscore_threshold, args.evalue,
+        args.struct_coverage, args.struct_cov_mode, args.tmscore_threshold,
+        args.tmscore_threshold_mode, args.evalue,
         args.struct_cluster_mode, args.threads)
 
     clusters_allo = cluster_scope(
         df_allo, 'allosteric', args.foldseek_bin, args.cif_dir,
-        args.struct_coverage, args.struct_cov_mode, args.tmscore_threshold, args.evalue,
+        args.struct_coverage, args.struct_cov_mode, args.tmscore_threshold,
+        args.tmscore_threshold_mode, args.evalue,
         args.struct_cluster_mode, args.threads)
 
     # ── [4/4] Write outputs ───────────────────────────────────────────────────

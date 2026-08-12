@@ -72,7 +72,9 @@ use `--only` to list every stage except `interactions`.
   all-singleton unless `--cif-dir` points at a populated directory of
   `{PDB_ID}-assembly1.cif` files.
 - Foldseek parameters used here : `--cluster-mode 1`
-  (connected-component) with `-c 0.8` / `--cov-mode 0` / `-e 0.01`.
+  (connected-component) with `-c 0.8` / `--cov-mode 0` / `-e 0.01` /
+  `--tmscore-threshold 0.5`. `--tmscore-threshold` filters on alignment quality;
+  `-c` only bounds alignment span.
   These are tunable only on the stage script itself, not through the orchestrator.
 - `scop2_sf_ids` / `cath_topology_ids` are annotation-only and never gate
   clustering; name caches live in `data/scop2_sf_names.csv` and
