@@ -85,8 +85,8 @@ rSASA_bound           — The same mean with ligands present, so the bound ligan
 frac_surface_apo      — Fraction of site residues with rSASA_apo > 0.25, i.e. surface-exposed in the unliganded state.
 frac_intermediate_apo — Fraction of site residues with 0 < rSASA_apo <= 0.25, i.e. partially buried.
 Charged               — Fraction of site residues that are K, R, D or E.
-Polar uncharged       — Fraction of site residues that are S, T, N, Q, C, H or Y.
-Hydrophobic aliphatic — Fraction of site residues that are G, A, V, I, L, M or P.
+Polar uncharged       — Fraction of site residues that are S, T, N, Q, H, Y, G or A.
+Hydrophobic aliphatic — Fraction of site residues that are V, I, L, M, P or C.
 Hydrophobic aromatic  — Fraction of site residues that are F or W.
 
 -------------------------------------------------------------------------------

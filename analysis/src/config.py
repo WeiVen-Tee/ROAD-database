@@ -245,11 +245,11 @@ KD_SCALE = {
     'S': -0.8, 'T': -0.7, 'W': -0.9, 'Y': -1.3, 'V':  4.2,
 }
   
-# Physicochemical property groups (4 non-overlapping groups; G,P → aliphatic; C → polar)
+# Physicochemical property groups
 AA_PROPERTY_GROUPS = {
     'Charged':               ['K', 'R', 'D', 'E'],
-    'Polar uncharged':       ['S', 'T', 'N', 'Q', 'C', 'H', 'Y'],
-    'Hydrophobic aliphatic': ['G', 'A', 'V', 'I', 'L', 'M', 'P'],
+    'Polar uncharged':       ['S', 'T', 'N', 'Q', 'H', 'Y', 'G', 'A'],
+    'Hydrophobic aliphatic': ['V', 'I', 'L', 'M', 'P', 'C'],
     'Hydrophobic aromatic':  ['F', 'W'],
 }
 
