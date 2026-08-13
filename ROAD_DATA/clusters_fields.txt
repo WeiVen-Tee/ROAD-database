@@ -1,0 +1,22 @@
+FIELD DESCRIPTIONS — clusters_all.csv, clusters_allosteric.csv
+===============================================================================
+
+clusters_all.csv         27,164 rows x 9 columns (one row per binding site)
+clusters_allosteric.csv   6,207 rows x 9 columns (allosteric sites only)
+
+Note: cluster_struc (cluster ID) is separately assigned for each set of structures. 
+The cluster IDs from the set of structures containing allosteric sites are independent 
+from the set containing all structures.
+
+-------------------------------------------------------------------------------
+COLUMNS
+-------------------------------------------------------------------------------
+ID                    — Unique site identifier
+protein_name_pdb      — Protein name as given in the PDB entry's own header.
+source_pdb            — Four-character PDB entry the site was extracted from.
+ligand_code           — The bound ligand as Chain.Resnum:CCD.
+site_category         — "orthosteric" if min_dist <= 5 A, otherwise "allosteric".
+uniprot_ac            — UniProt accession of the protein the site belongs to.
+cluster_struc         — Structural cluster of the site's protein, from Foldseek easy-cluster.
+scop2_sf_ids          — SCOP2 superfamily IDs for the protein.
+cath_topology_ids     — CATH IDs for the protein.

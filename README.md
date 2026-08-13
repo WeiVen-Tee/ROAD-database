@@ -96,16 +96,18 @@ README for stage-by-stage detail and CLI flags.
 
 ## Data
 
-`ROAD_DATA/` holds the two result tables, one row per non-redundant
+`ROAD_DATA/` holds the result tables, one row per non-redundant
 ligand-binding site:
 
 | File | Shape | Contents |
 |---|---|---|
 | `nonredundant_sites_annotated_enriched.csv` | 27,164 × 20 | `collection`'s final output: the site residues, its orthosteric/allosteric category, distances to the functional site, and protein annotation. |
 | `site_ligand_features.csv` | 27,164 × 91 | The same sites joined to `analysis`'s features: ligand descriptors, site geometry and solvent accessibility, amino-acid composition, and protein–ligand contact fractions. |
+| `clusters_all.csv` | 27,164 × 9 | The same sites with their Foldseek structural cluster. |
+| `clusters_allosteric.csv` | 6,207 × 9 | The allosteric sites only, clustered separately. |
 
-Every column is described in the companion `*_fields.txt` file. The two tables share
-the same `ID` values, so they join one-to-one.
+Every column is described in the companion `*_fields.txt` file. The first three tables
+share the same `ID` values and join one-to-one; `clusters_allosteric.csv` is a subset.
 
 ## Citation
 
