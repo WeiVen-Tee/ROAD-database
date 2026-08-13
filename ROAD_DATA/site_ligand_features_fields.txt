@@ -60,6 +60,7 @@ HBA_per_HA            — NumHAcceptors divided by heavy-atom count.
 
 RingCount             — Total number of rings in the ligand.
 RingCount_per_HA      — RingCount divided by heavy-atom count.
+NumAromaticRings      — Number of aromatic rings in the ligand.
 NumAromaticRings_per_HA — Number of aromatic rings divided by heavy-atom count.
 NumAliphaticRings     — Number of non-aromatic rings.
 NumAliphaticRings_per_HA — NumAliphaticRings divided by heavy-atom count.

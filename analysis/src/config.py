@@ -195,7 +195,7 @@ STANDARD_AA = list('ACDEFGHIKLMNPQRSTVWY')
 # variants, or per-AA fraction columns not consumed downstream.
 BUILD_EXCLUDE_COLUMNS = [
     'ccd_code', 'smiles_source', 'parse_quality',
-    'NumAromaticRings', 'NumAromaticAtoms', 'LipinskiViolations', 'embed_source',
+    'NumAromaticAtoms', 'LipinskiViolations', 'embed_source',
     'RotatableBondFraction',
     'n_sites_orthosteric', 'n_sites_allosteric',
     'modal_category', 'exclusive_category',
@@ -214,7 +214,8 @@ SITE_LIGAND_FEATURE_COLUMN_ORDER = [
     'ASA_per_Volume', 'NumRotatableBonds', 'NumRotatableBonds_per_HA',
     'FractionAromaticAtoms', 'FractionCSP3', 'QED', 'TPSA', 'TPSA_per_HA',
     'NumHDonors', 'HBD_per_HA', 'NumHAcceptors', 'HBA_per_HA',
-    'RingCount', 'RingCount_per_HA', 'NumAromaticRings_per_HA',
+    'RingCount', 'RingCount_per_HA',
+    'NumAromaticRings', 'NumAromaticRings_per_HA',
     'NumAliphaticRings', 'NumAliphaticRings_per_HA',
     'NumSaturatedRings', 'NumSaturatedRings_per_HA',
     'NumAromaticHeterocycles', 'NumAromaticHeterocycles_per_HA',
