@@ -1,0 +1,46 @@
+FIELD DESCRIPTIONS — hierarchy.csv
+===============================================================================
+
+27,164 rows x 22 columns (one row per site of site_ligand_features.csv)
+
+Sites are grouped as EC subclass > protein > location. A location is a group of sites
+on one protein that contact identical or substantially overlapping sets of residues.
+Upper-case columns are the keys of the three levels.
+
+-------------------------------------------------------------------------------
+EC SUBCLASS
+-------------------------------------------------------------------------------
+EC_SUBCLASS             — First two EC digits of the protein; "multiple" if several, "none" if no EC.
+ec_class_name           — Name of the EC class.
+ec_subclass_name        — Name of the EC subclass.
+ec_subclass_n_proteins  — Proteins in the subclass.
+ec_subclass_n_sites     — Sites in the subclass.
+
+-------------------------------------------------------------------------------
+PROTEIN
+-------------------------------------------------------------------------------
+UNIPROT_AC              — UniProt accession.
+UNIPROT_CHAIN           — UniProt chain ID of a viral polyprotein's mature product (e.g. PRO_0000449623); blank otherwise.
+protein_name            — UniProt protein name (the product's name for a polyprotein product).
+protein_n_locations     — Locations on the protein.
+protein_n_sites         — Sites on the protein.
+
+-------------------------------------------------------------------------------
+LOCATION
+-------------------------------------------------------------------------------
+LOCATION_ID             — Location identifier; blank if the site could not be reliably mapped to UniProt positions.
+location_category       — Majority site category: orthosteric, allosteric, or mixed (tie).
+location_n_sites        — Sites in the location.
+location_mean_tanimoto  — Mean ECFP4 Tanimoto similarity between the location's ligands (1 = identical).
+location_residues       — UniProt residue positions contacted by at least half of its sites ("a-b" = range).
+
+-------------------------------------------------------------------------------
+SITE
+-------------------------------------------------------------------------------
+site_id                 — Site identifier, as ID in site_ligand_features.csv.
+pdb_id                  — PDB entry.
+ligand                  — Ligand CCD code.
+site_category           — "orthosteric" (min_dist <= 5 A) or "allosteric".
+min_dist                — Distance in angstroms to the nearest functional residue.
+site_residues           — Contacted residues as UniProt positions ("a-b" = range).
+ligand_smiles           — Ligand canonical SMILES.
