@@ -2,7 +2,8 @@
 Fetch UniProt protein names for all unique UniProt accessions mapped to PDB entries.
 
 Reads pdb2unp.p to derive the set of canonical accessions, then fetches protein
-names in parallel batches via the UniProt search API.
+names and EC numbers in parallel batches via the UniProt search API. EC numbers
+come from the protein name, else catalytic-activity annotations, else BRENDA.
 
 For accessions with more than one pooled EC number (polyproteins/multi-catalytic-
 domain proteins, e.g. viral replicase polyproteins), the pooled `ec` field from the
@@ -19,7 +20,8 @@ Usage:
     python fetch_uniprot_names.py [-v]
 
 Outputs (result/mapping/):
-    uniprot_names.p        — DataFrame: unp_acc, protein_name, ec_number
+    uniprot_names.p        — DataFrame: unp_acc, protein_name, ec_number, ec_source
+                              (name / catalytic_activity / brenda; empty if no EC)
     uniprot_names.csv      — same as CSV
     uniprot_ec_segments.p  — dict[unp_acc] -> list[(unp_start, unp_end, [ec_number, ...])],
                               populated only for cleaved multi-EC accessions where every
@@ -37,35 +39,60 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import RESULT_MAPPING_DIR, UNIPROT_SEARCH_URL, UNIPROT_CHUNK_SIZE, UNIPROT_WORKERS, LOG_DIR
-from utils import create_session, load_pickle, save_pickle, setup_logging
+from utils import canonical_accession, create_session, load_pickle, save_pickle, setup_logging
 
 log = None  # set in main()
 
-_ISOFORM_RE = re.compile(r"-\d+$")
+_TSV_COLUMNS = {"Entry": "unp_acc", "Protein names": "protein_name", "EC number": "ec",
+                "Catalytic activity": "catalytic", "BRENDA": "brenda"}
+_SUBCLASS_RE = re.compile(r"^\d+\.\d+\.")
+
+
+def _split_ecs(text: str) -> list[str]:
+    """Unique EC numbers from a ';'-separated field, in their original order."""
+    return list(dict.fromkeys(e.strip() for e in text.split(";") if e.strip()))
+
+
+def _choose_ec(row: dict) -> tuple[str, str]:
+    """(ec_number, ec_source) from a row of the search-API response."""
+    sources = [
+        ("name", _split_ecs(row["ec"])),
+        ("catalytic_activity", list(dict.fromkeys(re.findall(r"EC=([0-9][0-9.n-]*)", row["catalytic"])))),
+        ("brenda", _split_ecs(row["brenda"])),
+    ]
+    for source, ecs in sources:
+        if any(_SUBCLASS_RE.match(e) for e in ecs):
+            return "; ".join(ecs), source
+    if sources[0][1]:
+        return "; ".join(sources[0][1]), "name"
+    return "", ""
 
 
 def _fetch_chunk(accessions: list[str], session) -> list[dict]:
     """Names and EC numbers for a batch of accessions in one search-API call.
 
-    Returns [{unp_acc, protein_name, ec_number}, ...] parsed from the TSV response.
+    Returns [{unp_acc, protein_name, ec_number, ec_source}, ...].
     """
     query = "accession:(" + " OR ".join(accessions) + ")"
     r = session.get(UNIPROT_SEARCH_URL, params={
         "query": query,
-        "fields": "accession,protein_name,ec",
+        "fields": "accession,protein_name,ec,cc_catalytic_activity,xref_brenda",
         "format": "tsv",
         "size": len(accessions),
     }, timeout=60)
     r.raise_for_status()
+    lines = r.text.splitlines()
+    header = [_TSV_COLUMNS[h] for h in lines[0].split("\t")]
     rows = []
-    for line in r.text.splitlines()[1:]:  # Skip TSV header row.
-        parts = line.split("\t")
-        if len(parts) >= 2:
-            rows.append({
-                "unp_acc":      parts[0],
-                "protein_name": parts[1],
-                "ec_number":    parts[2].strip() if len(parts) >= 3 else "",
-            })
+    for line in lines[1:]:
+        row = dict(zip(header, line.split("\t")))
+        ec_number, ec_source = _choose_ec(row)
+        rows.append({
+            "unp_acc":      row["unp_acc"],
+            "protein_name": row["protein_name"],
+            "ec_number":    ec_number,
+            "ec_source":    ec_source,
+        })
     return rows
 
 
@@ -132,11 +159,7 @@ def _build_ec_segments(df: 'pd.DataFrame') -> dict:
         futures = {executor.submit(_fetch_ec_segments_one, acc): acc for acc in ambiguous}
         for future in as_completed(futures):
             acc = futures[future]
-            try:
-                segments = future.result()
-            except Exception as e:
-                log.warning(f"EC segment fetch failed for {acc}: {e}")
-                continue
+            segments = future.result()
             if segments:
                 ec_segments[acc] = segments
 
@@ -158,7 +181,7 @@ def main(verbose: bool = False) -> None:
     # Flatten all UniProt ACs from the PDB→UniProt map.
     raw_accs = {unp for unps in pdb2unp.values() for unp in unps}
     # Strip isoform suffixes (e.g. 'P00533-2' → 'P00533') and deduplicate.
-    unique_accs = sorted({_ISOFORM_RE.sub("", a) for a in raw_accs})
+    unique_accs = sorted({canonical_accession(a) for a in raw_accs})
     total = len(unique_accs)
     log.info(f"Fetching names for {total:,} canonical UniProt accessions")
     print(f"Fetching UniProt names for {total:,} accessions...")
@@ -184,23 +207,16 @@ def main(verbose: bool = False) -> None:
                 print(f"  [{completed}/{len(chunks)}] chunks done  ({len(all_rows):,} names so far)")
 
     if errors:
-        log.warning(f"{len(errors)} chunk(s) failed")
-
-    if not all_rows:
-        log.error("No rows collected — all chunks failed")
-        return
+        raise RuntimeError(f"{len(errors)} of {len(chunks)} chunk(s) failed: {errors[0]}")
+    missing = sorted(set(unique_accs) - {row["unp_acc"] for row in all_rows})
+    if missing:
+        log.warning(f"{len(missing)} accession(s) not returned by UniProt "
+                    f"(obsolete or merged): {', '.join(missing)}")
 
     # Drop duplicates that may arise when isoform and canonical were both requested.
     df = pd.DataFrame(all_rows).drop_duplicates(subset="unp_acc").reset_index(drop=True)
     resolved = (df["protein_name"].notna() & (df["protein_name"] != "")).sum()
     log.info(f"Resolved: {resolved:,}/{total:,} ({100 * resolved / total:.1f}%)")
-
-    csv_path = os.path.join(RESULT_MAPPING_DIR, "uniprot_names.csv")
-    pkl_path = os.path.join(RESULT_MAPPING_DIR, "uniprot_names.p")
-    df.to_csv(csv_path, index=False)
-    save_pickle(df, pkl_path)
-    log.info(f"Saved {len(df):,} rows → {pkl_path}")
-    print(f"Saved {len(df):,} UniProt names → {RESULT_MAPPING_DIR}")
 
     # Second pass: disambiguate pooled multi-EC accessions into per-cleavage-product
     # residue segments (see module docstring).
@@ -216,6 +232,14 @@ def main(verbose: bool = False) -> None:
     pd.DataFrame(seg_rows).to_csv(ec_seg_csv, index=False)
     log.info(f"Saved EC segments for {len(ec_segments):,} accessions → {ec_seg_pkl}")
     print(f"Saved EC segments for {len(ec_segments):,} accessions → {RESULT_MAPPING_DIR}")
+
+    # Saved last, so an interrupted run is not mistaken for a complete one.
+    csv_path = os.path.join(RESULT_MAPPING_DIR, "uniprot_names.csv")
+    pkl_path = os.path.join(RESULT_MAPPING_DIR, "uniprot_names.p")
+    df.to_csv(csv_path, index=False)
+    save_pickle(df, pkl_path)
+    log.info(f"Saved {len(df):,} rows → {pkl_path}")
+    print(f"Saved {len(df):,} UniProt names → {RESULT_MAPPING_DIR}")
 
 
 if __name__ == "__main__":

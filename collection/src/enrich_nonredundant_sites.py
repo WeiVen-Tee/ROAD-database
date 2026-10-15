@@ -5,7 +5,7 @@ Usage:
     python enrich_nonredundant_sites.py --input PATH [-v]
 
 Adds columns: site_category, min_dist, median_dist, avg_dist, pdb_resolution,
-n_chains, total_aa, organism, ec_number, protein_name_uniprot, protein_name_pdb,
+n_chains, total_aa, organism, ec_number, ec_source, protein_name_uniprot, protein_name_pdb,
 chains_in_site, nearby_ions, cath_superfamily, functional_site_res.
 """
 
@@ -23,7 +23,7 @@ from config import (
     RESULT_DISTANCES_DIR, RESULT_NONREDUNDANT_DIR, RESULT_PROTEIN_NAMES_DIR, LOG_DIR,
     RCSB_META_WORKERS, RCSB_META_TIMEOUT, ORTHOSTERIC_MAX_DIST,
 )
-from utils import create_session, load_pickle, save_pickle, setup_logging
+from utils import canonical_accession, create_session, load_pickle, save_pickle, setup_logging
 
 log = None  # set in main()
 
@@ -35,6 +35,7 @@ FIELDNAMES = [
     'site_category', 'min_dist', 'median_dist', 'avg_dist', 'nearby_ions', 'uniprot_ac',
     'protein_name_uniprot', 'protein_name_pdb', 'chains_in_site', 'organism',
     'pdb_resolution', 'n_chains', 'total_aa', 'cath_superfamily', 'ec_number',
+    'ec_source',
 ]
 
 
@@ -134,9 +135,12 @@ def _build_chain_range_lookup(uniprot_csv: str) -> dict:
     }
 
 
+_EC_SOURCES = ['name', 'catalytic_activity', 'brenda']
+
+
 def _narrowed_ec(unp: str, chain: str, pdb_id: str, ec_lookup: dict,
-                  ec_segments_lookup: dict, chain_range_lookup: dict) -> list[str]:
-    """EC number(s) for one accession's contribution to a site.
+                  ec_segments_lookup: dict, chain_range_lookup: dict) -> tuple[list[str], str]:
+    """(EC numbers, ec_source) for one accession's contribution to a site.
 
     For a cleaved polyprotein the pooled ec_lookup value unions every cleavage
     product's EC, which is wrong for any single structure. Where per-product
@@ -146,7 +150,7 @@ def _narrowed_ec(unp: str, chain: str, pdb_id: str, ec_lookup: dict,
     rather than its uncleaved precursor's.
 
     Falls back to the pooled value whenever narrowing is not possible, so it
-    never returns less than ec_lookup alone.
+    never returns less than ec_lookup alone. Isoforms use their canonical entry's EC.
     """
     segments = ec_segments_lookup.get(unp)
     rng = chain_range_lookup.get((pdb_id, chain, unp))
@@ -160,8 +164,8 @@ def _narrowed_ec(unp: str, chain: str, pdb_id: str, ec_lookup: dict,
             if matches:
                 # Overlapping segments: the narrowest (most specific) product wins.
                 _, _, ecs = min(matches, key=lambda seg: seg[1] - seg[0])
-                return list(ecs)
-    return [e.strip() for e in (ec_lookup.get(unp) or '').split(';') if e.strip()]
+                return list(ecs), 'name'
+    return ec_lookup.get(canonical_accession(unp), ([], ''))
 
 
 def _ec_for_site(site_res: list, pdb_id: str, pdb_chain_to_unp: dict, ec_lookup: dict,
@@ -178,7 +182,7 @@ def _ec_for_site(site_res: list, pdb_id: str, pdb_chain_to_unp: dict, ec_lookup:
     Args:
         site_res:         List of residue IDs in 'CHAIN.RESNUM' format (model prefix stripped).
         pdb_chain_to_unp: Dict mapping (pdb_id, chain) → set of UniProt ACs.
-        ec_lookup:        Dict mapping UniProt AC → semicolon-separated (pooled) EC string or None.
+        ec_lookup:        Dict mapping canonical UniProt AC → ([pooled EC, ...], ec_source).
         ec_segments_lookup: Dict mapping UniProt AC → list of (unp_start, unp_end, [ec, ...])
             cleavage-product segments, for polyprotein accessions only (see _narrowed_ec).
         chain_range_lookup: Dict mapping (pdb_id, asym_id, unp_acc) →
@@ -188,12 +192,13 @@ def _ec_for_site(site_res: list, pdb_id: str, pdb_chain_to_unp: dict, ec_lookup:
             no chain in site_res maps to anything in pdb_chain_to_unp.
 
     Returns:
-        Semicolon-separated EC number string, or None if no EC found.
+        (EC numbers, ec_source), each ';'-separated, or (None, None) if no EC found.
     """
     # Extract unique chain letters from the residue list.
     chains = {r.split('.')[0] for r in site_res}
     seen: set = set()
     ec_numbers: list = []
+    sources: list = []
     for chain in sorted(chains):
         # Try the exact chain label, then the canonical suffix-stripped one.
         canonical = chain.split('-')[0]
@@ -205,16 +210,19 @@ def _ec_for_site(site_res: list, pdb_id: str, pdb_chain_to_unp: dict, ec_lookup:
                 continue
             seen.add(unp)
             # Range lookups are keyed by the canonical asym_id for the same reason.
-            for e in _narrowed_ec(unp, canonical, pdb_id, ec_lookup,
-                                  ec_segments_lookup, chain_range_lookup):
+            ecs, source = _narrowed_ec(unp, canonical, pdb_id, ec_lookup,
+                                       ec_segments_lookup, chain_range_lookup)
+            for e in ecs:
                 if e not in ec_numbers:
                     ec_numbers.append(e)
+            if ecs and source not in sources:
+                sources.append(source)
     if not ec_numbers and fallback_uniprot_ac:
-        for e in (ec_lookup.get(fallback_uniprot_ac) or '').split(';'):
-            e = e.strip()
-            if e and e not in ec_numbers:
-                ec_numbers.append(e)
-    return ';'.join(ec_numbers) if ec_numbers else None
+        ec_numbers, source = ec_lookup.get(canonical_accession(fallback_uniprot_ac), ([], ''))
+        sources = [source] if ec_numbers else []
+    if not ec_numbers:
+        return None, None
+    return ';'.join(ec_numbers), ';'.join(sorted(sources, key=_EC_SOURCES.index))
 
 
 # ── Ion proximity lookup ──────────────────────────────────────────────────────
@@ -285,7 +293,7 @@ def main(input_path: str, verbose: bool = False) -> None:
       pdb_resolution, organism, n_chains, total_aa     pdb_cif_cache.p
                                                        (resolution/organism gaps
                                                        filled from the RCSB API here)
-      protein_name_uniprot, ec_number                  uniprot_names.p, narrowed
+      protein_name_uniprot, ec_number, ec_source       uniprot_names.p, narrowed
                                                        per cleavage product where
                                                        segments exist
       protein_name_pdb, chains_in_site                 protein_names_pdb.csv
@@ -358,8 +366,9 @@ def main(input_path: str, verbose: bool = False) -> None:
     for _, r in uniprot_names.iterrows():
         acc = r['unp_acc']
         name_lookup[acc] = r.get('protein_name')
-        val = r.get('ec_number') # EC number is fetched earlier in fetch_uniprot_names.py
-        ec_lookup[acc] = val if (pd.notna(val) and val != "") else None
+        val = r.get('ec_number')
+        ecs = [e.strip() for e in val.split(';') if e.strip()] if pd.notna(val) else []
+        ec_lookup[acc] = (ecs, r.get('ec_source'))
 
     # For each PDB, collect the set of functional residue IDs (strip model prefix '1.').
     # e[1] is the residue ID; split on '.' once and take the suffix (CHAIN.RESNUM).
@@ -377,6 +386,9 @@ def main(input_path: str, verbose: bool = False) -> None:
         func_res   = func_lookup.get(pdb_id)
         ions       = _lookup_ions(site_ion_db, pdb_id, lig_code)
         name_pdb, chains_in_site = names_lookup.get((pdb_id, lig_code), (None, None))
+        ec_number, ec_source = _ec_for_site(rec['site_res_list'], pdb_id, pdb_chain_to_unp,
+                                            ec_lookup, ec_segments_lookup, chain_range_lookup,
+                                            fallback_uniprot_ac=uniprot_ac)
         enriched.append({
             'ID':                  _build_id(pdb_id, lig_code),
             'source_pdb':          pdb_id,
@@ -389,7 +401,7 @@ def main(input_path: str, verbose: bool = False) -> None:
             'avg_dist':            avg_d,
             'nearby_ions':         ions,
             'uniprot_ac':          uniprot_ac,
-            'protein_name_uniprot': name_lookup.get(uniprot_ac),
+            'protein_name_uniprot': name_lookup.get(canonical_accession(uniprot_ac)) if uniprot_ac else None,
             'protein_name_pdb':    name_pdb,
             'chains_in_site':      chains_in_site,
             # Upper-case only the first character so lowercase CIF-sourced names become
@@ -400,9 +412,8 @@ def main(input_path: str, verbose: bool = False) -> None:
             'n_chains':            meta.get('n_chains'),
             'total_aa':            meta.get('total_aa'),
             'cath_superfamily':    _cath_for_site(rec['site_res_list'], pdb_id, cath_lookup),
-            'ec_number':           _ec_for_site(rec['site_res_list'], pdb_id, pdb_chain_to_unp,
-                                                ec_lookup, ec_segments_lookup, chain_range_lookup,
-                                                fallback_uniprot_ac=uniprot_ac),
+            'ec_number':           ec_number,
+            'ec_source':           ec_source,
         })
 
     save_pickle(enriched, out_p)

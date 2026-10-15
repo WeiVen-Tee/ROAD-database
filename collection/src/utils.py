@@ -3,8 +3,8 @@ Helpers shared across every step of the collection pipeline.
 
 Grouped by concern: pickle I/O (load_pickle/save_pickle), logging setup
 (setup_logging), HTTP sessions with retry (create_session), CIF parsing
-(cif2seq, pdb_ids_from_cif_dir), and the UnionFind used by the non-redundant
-clustering step.
+(cif2seq, pdb_ids_from_cif_dir), UniProt accessions (canonical_accession),
+and the UnionFind used by the non-redundant clustering step.
 
 `../analysis` imports setup_logging, create_session, load_pickle, save_pickle,
 cif2seq and UnionFind from here directly, so this module is part of the
@@ -90,6 +90,14 @@ def create_session() -> requests.Session:
     session.mount('http://',  adapter)
     session.mount('https://', adapter)
     return session
+
+
+_ISOFORM_RE = re.compile(r'-\d+$')
+
+
+def canonical_accession(acc: str) -> str:
+    """UniProt accession without its isoform suffix ('P00533-2' -> 'P00533')."""
+    return _ISOFORM_RE.sub('', acc)
 
 
 _CIF_ID_RE = re.compile(r'^([A-Za-z0-9]{4})-assembly1\.cif$', re.IGNORECASE)
