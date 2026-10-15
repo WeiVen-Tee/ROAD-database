@@ -6,8 +6,8 @@ the assembly CIF files in --cif-dir. Two binding-site rows cluster together only
 they use the exact same set of Foldseek structural clusters across all their chains.
 
 ALL rows and allosteric-only rows are clustered independently, so cluster IDs
-are file-local: cluster_struc=3 means different things in clusters_all.csv and
-clusters_allosteric.csv.
+are file-local: cluster_struc=3 means different things in clusters_foldseek_all.csv and
+clusters_foldseek_allosteric.csv.
 
 Foldseek defaults here: --cluster-mode 1 (connected-component) with -c 0.8 /
 --cov-mode 0 / -e 0.01 / --tmscore-threshold 0.5. See --help to override.
@@ -23,7 +23,7 @@ Inputs
 
 Outputs
 -------
-  data/clusters_all.csv, data/clusters_allosteric.csv
+  data/clusters_foldseek_all.csv, data/clusters_foldseek_allosteric.csv
   data/foldseek_{ALL,allosteric}_cluster.tsv  (easy-cluster's raw adjacency list)
   data/scop2_sf_names.csv, data/cath-names.txt  (annotation caches)
   data/largest_clusters.csv                   (per-cluster SCOP2/CATH breakdown)
@@ -640,13 +640,13 @@ def main() -> None:
     t0 = cli_utils.init_run('cluster_protein_similarity', args, config.LOG_DIR)
 
     site_features_csv = os.path.join(config.DATA_DIR, 'site_ligand_features.csv')
-    out_all_path  = os.path.join(config.DATA_DIR, 'clusters_all.csv')
-    out_allo_path = os.path.join(config.DATA_DIR, 'clusters_allosteric.csv')
+    out_all_path  = os.path.join(config.DATA_DIR, 'clusters_foldseek_all.csv')
+    out_allo_path = os.path.join(config.DATA_DIR, 'clusters_foldseek_allosteric.csv')
 
     if (io_utils.output_is_cached(out_all_path, args.force)
             and io_utils.output_is_cached(out_allo_path, args.force)
             and io_utils.output_is_cached(LARGEST_CLUSTERS_FILE, args.force)):
-        print('[1/1] clusters_all.csv, clusters_allosteric.csv, and largest_clusters.csv '
+        print('[1/1] clusters_foldseek_all.csv, clusters_foldseek_allosteric.csv, and largest_clusters.csv '
               'already exist — SKIP (--force to recompute).')
         cli_utils.finish_run(t0)
         return

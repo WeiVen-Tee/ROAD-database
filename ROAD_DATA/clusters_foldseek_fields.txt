@@ -1,8 +1,8 @@
-FIELD DESCRIPTIONS — clusters_all.csv, clusters_allosteric.csv
+FIELD DESCRIPTIONS — clusters_foldseek_all.csv, clusters_foldseek_allosteric.csv
 ===============================================================================
 
-clusters_all.csv         27,164 rows x 9 columns (one row per binding site)
-clusters_allosteric.csv   6,207 rows x 9 columns (allosteric sites only)
+clusters_foldseek_all.csv         27,164 rows x 9 columns (one row per binding site)
+clusters_foldseek_allosteric.csv   6,207 rows x 9 columns (allosteric sites only)
 
 Note: cluster_struc (cluster ID) is separately assigned for each set of structures. 
 The cluster IDs from the set of structures containing allosteric sites are independent 

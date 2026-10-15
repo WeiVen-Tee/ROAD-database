@@ -170,7 +170,7 @@ _STAGE_OUTPUTS = {
     'interactions':    ['interaction_contacts.csv', 'interaction_contacts_shared.csv'],
     'recap_fragments': ['recap_fragments.csv', 'recap_fragment_associations.csv'],
     'build':           ['site_ligand_features.csv'],
-    'cluster':         ['clusters_all.csv', 'clusters_allosteric.csv',
+    'cluster':         ['clusters_foldseek_all.csv', 'clusters_foldseek_allosteric.csv',
                         'largest_clusters.csv'],
 }
 

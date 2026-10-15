@@ -67,7 +67,7 @@ use `--only` to list every stage except `interactions`.
 **Caveats for `cluster`:**
 
 - Cluster IDs are **file-local**. The same `cluster_struc` integer in
-  `clusters_all.csv` and `clusters_allosteric.csv` does not mean the same cluster.
+  `clusters_foldseek_all.csv` and `clusters_foldseek_allosteric.csv` does not mean the same cluster.
 - `cluster_struc` is Foldseek-only (structure), and is
   all-singleton unless `--cif-dir` points at a populated directory of
   `{PDB_ID}-assembly1.cif` files.
@@ -92,7 +92,7 @@ use `--only` to list every stage except `interactions`.
 | `interactions`      | `src/analyze_interactions.py`      | `data/interaction_contacts{,_shared}.csv` | `descriptors`, `exclusive_categories`  |
 | `recap_fragments`   | `src/analyze_recap_fragments.py`   | `data/recap_fragments.csv`, `data/recap_fragment_associations.csv` | `smiles`, `exclusive_categories` |
 | `build`             | `run_analysis_pipeline.py` (inline) | `data/site_ligand_features.csv`         | all of the above (best-effort)          |
-| `cluster`           | `src/cluster_protein_similarity.py` | `data/clusters_{all,allosteric}.csv`, `data/largest_clusters.csv` | `build`         |
+| `cluster`           | `src/cluster_protein_similarity.py` | `data/clusters_foldseek_{all,allosteric}.csv`, `data/largest_clusters.csv` | `build`         |
 
 The `protein_name_pdb` column in the input table comes from `../collection`, not
 this pipeline: collection's `protein_names` step writes it and folds it into the
