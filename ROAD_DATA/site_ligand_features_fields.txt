@@ -1,7 +1,7 @@
 FIELD DESCRIPTIONS — site_ligand_features.csv
 ===============================================================================
 
-27,164 rows x 91 columns (one row per non-redundant ligand-binding site)
+27,164 rows x 93 columns (one row per non-redundant ligand-binding site)
 
 Row IDs are identical to nonredundant_sites_annotated_enriched.csv
 
@@ -20,7 +20,7 @@ median_dist           — Median.
 avg_dist              — Mean.
 nearby_ions           — Crystallographic ions within 4.5 A of the ligand, as Chain.Resnum:CCD.
 uniprot_ac            — UniProt accession of the protein.
-protein_name_uniprot  — Protein name from UniProt.
+protein_name_uniprot  — Protein name from UniProt (for an isoform, its canonical entry's).
 protein_name_pdb      — Protein name from the PDB entry header.
 organism              — Scientific name of the source organism.
 pdb_resolution        — Crystallographic resolution in angstroms.
@@ -28,6 +28,9 @@ n_chains              — Number of protein chains in the biological assembly.
 total_aa              — Total amino-acid residues across the assembly.
 cath_superfamily      — CATH superfamily identifier.
 ec_number             — Enzyme Commission number(s).
+ec_source             — Where ec_number comes from in UniProt: "name" (protein name),
+                        "catalytic_activity", or "brenda" (BRENDA cross-reference);
+                        semicolon-separated if the site's chains differ.
 
 -------------------------------------------------------------------------------
 LIGAND CATEGORY

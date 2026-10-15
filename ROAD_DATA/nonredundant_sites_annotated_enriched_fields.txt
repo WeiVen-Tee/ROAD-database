@@ -1,7 +1,7 @@
 FIELD DESCRIPTIONS — nonredundant_sites_annotated_enriched.csv
 ===============================================================================
 
-27,164 rows x 20 columns (one row per non-redundant ligand-binding site)
+27,164 rows x 21 columns (one row per non-redundant ligand-binding site)
 
 -------------------------------------------------------------------------------
 IDENTIFIERS
@@ -25,7 +25,7 @@ nearby_ions           — Crystallographic ions found within 4.5 A of the ligand
 -------------------------------------------------------------------------------
 PROTEIN ANNOTATION
 -------------------------------------------------------------------------------
-protein_name_uniprot  — Protein name from UniProt.
+protein_name_uniprot  — Protein name from UniProt (for an isoform, its canonical entry's).
 protein_name_pdb      — Protein name as given in the PDB entry's own header.
 chains_in_site        — Which chains of the assembly contribute residues to this site, most-contributing first.
 organism              — Scientific name of the source organism, from the RCSB REST API (e.g. "Bos taurus").
@@ -34,3 +34,6 @@ n_chains              — Number of protein chains in the biological assembly.
 total_aa              — Total number of amino-acid residues across all chains of the assembly.
 cath_superfamily      — CATH superfamily identifier for the protein fold (e.g. "3.10.130.10"); empty for rows where no CATH assignment exists.
 ec_number             — Enzyme Commission number(s), semicolon-separated if more than one.
+ec_source             — Where ec_number comes from in UniProt: "name" (protein name),
+                        "catalytic_activity", or "brenda" (BRENDA cross-reference);
+                        semicolon-separated if the site's chains differ.
