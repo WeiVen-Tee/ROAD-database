@@ -1,7 +1,7 @@
 # The **R**epository for **O**rthosteric and **A**llosteric **D**esign (**ROAD**)
 
 ## ROAD
-<img src="images/overview.png" alt="ROAD overview" width="550" align="left" hspace="20">
+<img src="images/overview.png" alt="ROAD overview" width="850" align="center"><br><br>
 
 |  | Allosteric site | Orthosteric site |
 |---|---|---|
