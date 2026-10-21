@@ -1,117 +1,209 @@
-# The ROAD (Repository for Orthosteric and Allosteric Design) database and analysis pipeline 
+# The **R**epository for **O**rthosteric and **A**llosteric **D**esign (**ROAD**)
 
-- Repository of allosteric and orthosteric (i.e. functional) sites and ligands. 
+## ROAD
+<img src="images/overview.png" alt="ROAD overview" width="550" align="left" hspace="20">
 
-- Analysis of multiple characteristics of allosteric and orthosteric/functional sites and ligands.
+|  | Allosteric site | Orthosteric site |
+|---|---|---|
+| Count | 6,207 | 20,957 |
+| No. of PDB structures with | 5,224 | 19,387 |
+| No. of proteins with | 1,136 | 3,489 |
+| No. of ligands bound to | 4,139 | 14,570 |    
 
-## Site categories
+  As of 2026; v1.0.0
 
-Binding sites are classified by `min_dist`, the distance from the site to the
-nearest UniProt-annotated Active/DNA-binding residue:
+<br>
+ROAD is a comprehensive database featuring high-quality, non-redundant sets of allosteric and functional (orthosteric) sites and ligands, systematically identified from 128,141 PDB structures. All data, alongside the construction and analysis pipelines, are freely available here. We anticipate that ROAD will pave the way for developing and benchmarking methods in allosteric site prediction, rational design of allosteric and orthosteric ligands, and engineering of allosteric mechanisms in proteins. The manuscript describing ROAD is available at TODO.
+The figure above illustrates the full distribution of site-ligand data in ROAD across individual proteins and enzymatic functions.
+<br clear="left"><br><br>
 
-| Category    | Criterion               |
-|--------------|--------------------------|
-| Orthosteric  | `min_dist ≤ 5 Å`         |
-| Allosteric   | `min_dist > 5 Å`         |
+<img src="images/top_groups_distances.png" alt="ROAD overview" width="850" align="center">
+
+<br> The left figure depicts the distribution of allosteric and active sites across the largest functional clusters. First, proteins were grouped by EC subclass (grey circles). To define ligand-binding locations within individual proteins (white circles), binding sites from all corresponding crystal structures were mapped onto the protein sequence. Sites with identical or substantially overlapping residues were then clustered into distinct locations (colored circles). Mean pairwise ligand similarity (ECFP4 Tanimoto) per location is indicated by red–orange (allosteric) and purple–blue (orthosteric) color scales. On the right, the minimum distance to an active site residue (dmin, Å) is plotted against total chain length for each allosteric site, colored by oligomeric state.
+
+Below: Characterization of allosteric/orthosteric sites (left) and ligands (right). See the paper TODO for more details.
+<img src="images/characteristics.png" alt="ROAD overview" width="850" align="center">
+<br clear="left">
+
+
+## Table of Contents
+
+- [ROAD](#road)
+- [Repository layout](#repository-layout)
+- [Environment](#environment)
+- [Collection module](#collection-module)
+   - [Prerequisites - collection](#prerequisites-for-the-collection-pipeline)
+   - [Setting up collection](#setting-up-collection)
+   - [Running collection](#running-collection)
+- [Analysis module](#analysis-module)
+   - [Prerequisites - analysis](#prerequisites-for-the-analysis-pipeline)
+   - [Running analysis](#running-analysis)
+- [Citation](#citation)
+- [Publications](#publications)
+- [License](#license)
+
 
 ## Repository layout
+`ROAD_DATA/` contains all computed final data (.csv) of the database that can be used directly, excluding the PDB structures (~6 GB) containing the allosteric/orthosteric sites, which can be downloaded from Zenodo at https://doi.org/10.5281/zenodo.21901988 or click the button below.
+<br>
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21901988.svg)](https://doi.org/10.5281/zenodo.21901988)  
 
+| Filename | Description |
+|---|---|
+| `nonredundant_sites_annotated_enriched.csv` | Data on protein structures, allosteric and orthosteric binding sites and ligand names.  Result from the Collection module|
+| `nonredundant_sites_annotated_enriched_fields.txt` | Description for the file above |
+| `site_ligand_features.csv` | Data on characteristics of binding sites, ligands and site-ligand interactions. Result from the Analysis module |
+| `site_ligand_features_fields.txt` | Description for the file above | 
+| `clusters_foldseek_all.csv` | Foldseek clustering result for all protein structures | 
+| `clusters_foldseek_allosteric.csv` | Foldseek clustering result for structures containing an allosteric site | 
+| `clusters_foldseek_fields.txt` | Description for the files above |
+| `hierarchy.csv` | Binding sites grouped as EC subclass > protein > location (sites sharing residues) |
+| `hierarchy_fields.txt` | Description for the file above |
+| `PDB.tar.gz` (Zenodo) | Directory of PDB structure files (~4 GB). Download from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21901988.svg)](https://doi.org/10.5281/zenodo.21901988) |
+| `PDB_allosteric.tar.gz` (Zenodo) | Directory of PDB structure files (~1 GB) | 
+<br>
+
+To build a custom database starting from a set of PDB structures:
+`Collection/` builds the datasets of allosteric and orthosteric/active sites and ligands.  
+`Analysis/` compute the characteristics of binding sites, ligands, and site-ligand interactions.  
+     
+<br>
+
+## Environment
+Create the conda environment and install the required packages:
+```bash
+conda env create -f environment.yml   # collection + analysis
+conda activate ROAD-database
 ```
-collection/   Data collection pipeline: PDB/UniProt/SIFTS mapping, binding-site
-              extraction, non-redundant clustering, metadata enrichment.
-              Outputs are tabular data, and PDB files (.cif) 
-analysis/     Analysis pipeline: characteristics of ligands, binding sites, and their interactions.
+<br>
+
+## Collection module
+Key steps in this module:
+- identifies functional sites annotated by UniProt
+- extracts binding sites bound by small molecules with biological roles
+- annotates and calculates the distance between binding sites and functional sites
+- performs de-duplication of similar site-ligand pairs to yield non-redundant sets  
+
+<br>
+An operational definition of allosteric sites is applied here, a ligand-binding site is considered allosteric if the shortest distance atom-atom distance between any functional site residue (e.g. active site and DNA-binding site) and any binding site residue exceeds 5 Å. Otherwise, the ligand is considered orthosteric, i.e. binding to the functional/active site of the protein.  
+<br><br>
+  
+**The main output from this module is already processed and provided in `ROAD_DATA/nonredundant_sites_annotated_enriched.csv`. When ran, the pipeline generates it in gitignored `collection/result/nonredundant/`** 
+  
+See the note in `ROAD_DATA/` on description of the data
+
+<br>
+
+### Prerequisites for the Collection pipeline
+1. PDB assembly CIF files
+   - The list of 128,141 PDB codes used here is provided at `collection/data/downloaded_PDB_{1,2}.txt`, which may be used to download the structures from the PDB in `{PDB_ID}-assembly1.cif` format if one wishes .
+   - See [Setting up Collection](#setting-up-collection) below for how to point the pipeline at your local copy.
+
+2. wwPDB Chemical Component Dictionary (CCD)
+   - Download **Chemical Component Dictionary: mmCIF (gz)** (~500 MB) from <https://www.wwpdb.org/data/ccd>
+   - Unzip and have the file as `collection/data/Components-rel-alt.cif`
+
+3. BioLiP artifact list
+   - Already included at `collection/data/possible_artifact_molecule_list.txt`, contains list of ligands that are likely experimental additives/buffers
+
+<br>
+
+### Setting up Collection
+
+`collection/src/config.py` needs a directory of PDB assembly CIF files, two ways to set it, either:
+```bash
+export STRUCTURE_CIF_DIR=/path/to/your/PDB/assembly/cifs/
+```
+or copy `collection/src/config_local.py.example` to a gitignored `collection/src/config_local.py`:
+
+```bash
+cp collection/src/config_local.py.example collection/src/config_local.py
+# then edit CIF_DIR in collection/src/config_local.py
 ```
 
-`collection` produces the non-redundant, annotated binding-site table, a copy of
-which lives in `analysis/input_dataset/` for the analysis stages to read.
-`analysis/src/config.py` also imports shared code and constants from
-`collection/src/` via a relative path (`../collection`), so the two directories
-must stay siblings under one parent as they are here.
+<br>
 
-## Setup
+### Running Collection
+```bash
+python run_collection_pipeline.py                                     # full run, all steps
+python run_collection_pipeline.py --h                                 # list stages and options
+python run_collection_pipeline.py --steps site_extraction site_filter # run specific steps only
+python run_collection_pipeline.py --verbose                           # verbose
+python run_collection_pipeline.py --force                             # force re-run, ignore cached outputs
+```
+A step is skipped when all of its outputs already exist; pass `-f`/`--force` to
+recompute. `--force` also clears the caches. 
 
-1. Create the conda environment:
+<br>
+
+## Analysis module
+This module analyses characteristics of allosteric and orthosteric sites (e.g. amino-acid composition, geometry, and more), ligands (topological, physicochemical properties, and more), as well as site-ligand interactions. It uses the output produced by the `../collection` module.
+
+**The main output from this module is already computed and provided in `ROAD_DATA/site_ligand_features.csv`. When ran, the pipeline generates it in gitignored `analysis/data/`**  
+
+See the note in `ROAD_DATA/` on description of the data
+
+<br>
+
+### Prerequisites for the Analysis pipeline
+- This sibling module requires that the user to have successfully run the collection pipeline `../collection/` using a local copy of PDB files, as it reads the multiple files obtained in the collection pipeline.  
+- Copy the main collection output into `analysis/input_dataset/`  
    ```bash
-   conda env create -f environment.yml   # collection + analysis
-   conda activate ROAD-database
+   mkdir -p input_dataset
+   cp ../collection/result/nonredundant/nonredundant_sites_annotated_enriched.csv input_dataset/
    ```
-2. Point both projects at your local structure-file cache (files named
-   `{PDB_ID}-assembly1.cif`). Neither repo hardcodes a machine-specific path —
-   either set the `STRUCTURE_CIF_DIR` environment variable, or create a
-   config from the shipped template and fill in `CIF_DIR`:
-   ```bash
-   cp collection/src/config_local.py.example collection/src/config_local.py
-   # then edit collection/src/config_local.py and set CIF_DIR
-   ```
-   `analysis` reads `CIF_DIR` from `collection`'s config automatically, so you
-   normally only need to set it once; `analysis/src/config_local.py.example`
-   exists only as a fallback for the rare case where you run `analysis`
-   standalone without a `collection/src/config_local.py` in place.
-3. Hand `collection`'s output to `analysis` after running the collection
-   pipeline — `analysis` reads it from a fixed location and does not reach into
-   `collection/result/` for it:
-   ```bash
-   cp collection/result/nonredundant/nonredundant_sites_annotated_enriched.csv \
-      analysis/input_dataset/
-   ```
-4. Obtain and place the third-party datasets as follows:
-   - The PDB Chemical Component Dictionary (~500 MB), which both pipelines
-     read independently from their own paths:
-     `collection/data/Components-rel-alt.cif` and
-     `analysis/ccd/Components-rel-alt.cif`. `collection/README.md` has the
-     download link and the decompress/rename steps; the same file serves both.
+- Copy the Chemical Component Dictionary file in the collection module and place it here 
+`analysis/ccd/Components-rel-alt.cif`.  
+- FreeSASA, Foldseek, pdbe-arpeggio and RDKit should be installed. See `environment.yml`.
 
-## Pipeline stages
+<br>
 
-```
-── collection ────────────────────────────────────────────────────────────────
-nextgen_annotations, uniprot_mapping,
-chain_unp_map, uniprot_names            SIFTS/UniProt mapping            → result/mapping/
-ligand_blacklist                        build_badlig                     → result/ligands/
-site_extraction, site_filter            binding-site extraction/filter   → result/binding_sites/
-uniprot_features                        fetch_uniprot_features           → result/functional/
-functional_site_mapping                 map_functional_sites             → result/functional/
-distances                               calculate_distances              → result/distances/
-nonredundant_build_*                    non-redundant clustering         → result/nonredundant/
-protein_names                           Protein Identity (better_protein_names) → result/protein_names/
-nonredundant_enrich_*                   distance/structural/functional enrich → result/nonredundant/
-nonredundant_pdb_copy                   copy_nonredundant_pdb            → result/nonredundant/PDB{,_allosteric}.tar.gz
+### Running Analysis
 
-── analysis ──────────────────────────────────────────────────────────────────
-Preparation             compute_exclusive_categories (inline)
-Ligand Profiling        enrich_ligand_smiles.py → analyze_ligand_descriptors.py
-Site Composition        analyze_aa_composition.py
-Site Geometry           analyze_site.py            (size + SASA + curvature)
-Interaction Contacts    analyze_interactions.py     (needs pdbe-arpeggio; see environment.yml)
-Fragment Analysis       analyze_recap_fragments.py
-Feature Build           build_site_ligand_features (inline; runs last, merging
-                          every feature stage above into one table)
-Protein Clustering      cluster_protein_similarity.py (needs foldseek; reads Feature Build)
+```bash
+python run_analysis_pipeline.py                           # full run, all stages
+python run_analysis_pipeline.py --help                    # list stages and options
+python run_analysis_pipeline.py --verbose                 # full run, verbose
+python run_analysis_pipeline.py --only smiles descriptors # run specific stages plus their dependencies
+python run_analysis_pipeline.py --force                   # force re-run
 ```
 
-Run collection first (`python collection/run_collection_pipeline.py`), then
-analysis (`python analysis/run_analysis_pipeline.py`). See each subfolder's
-README for stage-by-stage detail and CLI flags.
-
-## Data
-
-`ROAD_DATA/` holds the result tables, one row per non-redundant
-ligand-binding site:
-
-| File | Shape | Contents |
-|---|---|---|
-| `nonredundant_sites_annotated_enriched.csv` | 27,164 × 20 | `collection`'s final output: the site residues, its orthosteric/allosteric category, distances to the functional site, and protein annotation. |
-| `site_ligand_features.csv` | 27,164 × 91 | The same sites joined to `analysis`'s features: ligand descriptors, site geometry and solvent accessibility, amino-acid composition, and protein–ligand contact fractions. |
-| `clusters_all.csv` | 27,164 × 9 | The same sites with their Foldseek structural cluster. |
-| `clusters_allosteric.csv` | 6,207 × 9 | The allosteric sites only, clustered separately. |
-
-Every column is described in the companion `*_fields.txt` file. The first three tables
-share the same `ID` values and join one-to-one; `clusters_allosteric.csv` is a subset.
+<br>
 
 ## Citation
-
+*TODO*
 See `CITATION.txt`.
+
+<br>
+
+## Publications
+#### Allosteric drugs and their design  
+[Allosteric solution to the problems of undruggable targets, drug toxicity, and emerging resistance](https://www.sciencedirect.com/science/article/pii/S0959440X25001903)
+
+[Toward the Design of Allosteric Effectors: Gaining Comprehensive Control of Drug Properties and Actions](https://pubs.acs.org/jmcmar/article/67/19/17191/194495/Toward-the-Design-of-Allosteric-Effectors-Gaining)
+
+[Allosteric drugs: New principles and design approaches](https://www.sciencedirect.com/science/article/abs/pii/S0959440X23002324)
+
+[Designing Structure-specific and Switchable Allosteric Effectors for GPCRs Based on the Causality and Energetics of Inherent Signaling](https://www.sciencedirect.com/science/article/pii/S0022283625003596)    
+
+#### Allosteric effects of mutations and their applications for protein design
+[On the relationship between protein stability, thermostability, and allosteric signaling](https://www.sciencedirect.com/science/article/pii/S0022283625006035?via%3Dihub)
+
+[Conservation and diversity in allosteric fingerprints of proteins for evolutionary-inspired engineering and design](https://www.sciencedirect.com/science/article/abs/pii/S0022283622001577?via%3Dihub)
+
+[On the Allosteric Effect of nsSNPs and the Emerging Importance of Allosteric Polymorphism](https://www.sciencedirect.com/science/article/abs/pii/S0022283619304413?via%3Dihub)
+
+#### Structure-Based Statistical Mechanical Model of Allostery (SBSMMA)  
+[Structure-Based Statistical Mechanical Model Accounts for the Causality and Energetics of Allosteric Communication](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1004678)    
+
+[Toward Comprehensive Allosteric Control over Protein Activity](https://www.sciencedirect.com/science/article/pii/S0969212619300140)
+
+#### The AlloSigMA web-server and AlloMAPS database  
+[AlloSigMA 2: paving the way to designing allosteric effectors and to exploring allosteric effects of mutations](https://academic.oup.com/nar/article/48/W1/W116/5835812) [[server link](https://allosigma.bii.a-star.edu.sg/home/)]
+
+[AlloMAPS 2: allosteric fingerprints of the AlphaFold and Pfam-trRosetta predicted structures for engineering and design](https://academic.oup.com/nar/article/51/D1/D345/6725768) [[database link](https://allomaps.bii.a-star.edu.sg)]
+
+<br>
 
 ## License
 
