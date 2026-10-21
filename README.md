@@ -44,9 +44,7 @@ Below: Characterization of allosteric/orthosteric sites (left) and ligands (righ
 
 
 ## Repository layout
-`ROAD_DATA/` contains all computed final data (.csv) of the database that can be used directly, excluding the PDB structures (~6 GB) containing the allosteric/orthosteric sites, which can be downloaded from Zenodo at https://doi.org/10.5281/zenodo.21901988 or click the button below.
-<br>
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21901988.svg)](https://doi.org/10.5281/zenodo.21901988)  
+`ROAD_DATA/` contains all computed final data (.csv) of the database that can be used directly, excluding the PDB structures (~6 GB) containing the allosteric/orthosteric sites, which can be downloaded from Zenodo at https://doi.org/10.5281/zenodo.21901988 or click this button [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21901988.svg)](https://doi.org/10.5281/zenodo.21901988)  
 
 | Filename | Description |
 |---|---|
@@ -60,10 +58,10 @@ Below: Characterization of allosteric/orthosteric sites (left) and ligands (righ
 | `hierarchy.csv` | Binding sites grouped as EC subclass > protein > location (sites sharing residues) |
 | `hierarchy_fields.txt` | Description for the file above |
 | `PDB.tar.gz` (Zenodo) | Directory of PDB structure files (~4 GB). Download from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21901988.svg)](https://doi.org/10.5281/zenodo.21901988) |
-| `PDB_allosteric.tar.gz` (Zenodo) | Directory of PDB structure files (~1 GB) | 
+| `PDB_allosteric.tar.gz` (Zenodo) | Directory of PDB structure files (~1 GB). Download from Zenodo. | 
 <br>
 
-To build a custom database starting from a set of PDB structures:
+To build a custom database starting from a set of PDB structures:<br>
 `Collection/` builds the datasets of allosteric and orthosteric/active sites and ligands.  
 `Analysis/` compute the characteristics of binding sites, ligands, and site-ligand interactions.  
      
