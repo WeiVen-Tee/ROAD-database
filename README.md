@@ -12,7 +12,8 @@
 
 
 <br>
-ROAD is a comprehensive database featuring high-quality, non-redundant sets of allosteric and functional (orthosteric) sites and ligands, systematically identified from 128,141 PDB structures. The figure above illustrates the full distribution of site-ligand data in ROAD across individual proteins and enzymatic functions. All data, alongside the construction and analysis pipelines, are freely available here. An interactive application to explore the ROAD database is available on [Hugging Face] (https://huggingface.co/spaces/weiventee/Repository_for_Orthosteric_and_Allosteric_Design). We anticipate that ROAD will pave the way for developing and benchmarking methods in allosteric site prediction, rational design of allosteric and orthosteric ligands, and engineering of allosteric mechanisms in proteins. <br><br>
+
+ROAD is a comprehensive database featuring high-quality, non-redundant sets of allosteric and functional (orthosteric) sites and ligands, systematically identified from 128,141 PDB structures. The figure above illustrates the full distribution of site-ligand data in ROAD across individual proteins and enzymatic functions. All data, alongside the construction and analysis pipelines, are freely available here. An interactive application to explore the ROAD database is available on [Hugging Face](https://huggingface.co/spaces/weiventee/Repository_for_Orthosteric_and_Allosteric_Design). We anticipate that ROAD will pave the way for developing and benchmarking methods in allosteric site prediction, rational design of allosteric and orthosteric ligands, and engineering of allosteric mechanisms in proteins. <br><br>
 
 
 
