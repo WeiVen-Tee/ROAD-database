@@ -1,2 +1,1 @@
-On the Road from Orthosteric to Allosteric Drugs: the ROAD database
-Wei-Ven Tee*, Raechell, and Igor N. Berezovsky*
+Tee W-V, Raechell, Berezovsky IN. On the Road from Orthosteric to Allosteric Drugs: The ROAD database of allosteric and orthosteric sites and ligands. Protein Science. 2026; 35(12):e70845. https://doi.org/10.1002/pro.70845

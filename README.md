@@ -10,18 +10,24 @@
 | No. of proteins with | 1,136 | 3,489 |
 | No. of ligands bound to | 4,139 | 14,570 |    
 
-  As of 2026; v1.0.0
 
 <br>
-ROAD is a comprehensive database featuring high-quality, non-redundant sets of allosteric and functional (orthosteric) sites and ligands, systematically identified from 128,141 PDB structures. All data, alongside the construction and analysis pipelines, are freely available here. We anticipate that ROAD will pave the way for developing and benchmarking methods in allosteric site prediction, rational design of allosteric and orthosteric ligands, and engineering of allosteric mechanisms in proteins. The manuscript describing ROAD is available at TODO.
-The figure above illustrates the full distribution of site-ligand data in ROAD across individual proteins and enzymatic functions.
-<br clear="left"><br><br>
+ROAD is a comprehensive database featuring high-quality, non-redundant sets of allosteric and functional (orthosteric) sites and ligands, systematically identified from 128,141 PDB structures. The figure above illustrates the full distribution of site-ligand data in ROAD across individual proteins and enzymatic functions. All data, alongside the construction and analysis pipelines, are freely available here. We anticipate that ROAD will pave the way for developing and benchmarking methods in allosteric site prediction, rational design of allosteric and orthosteric ligands, and engineering of allosteric mechanisms in proteins. <br><br>
+
+ROAD is available on Hugging Face & Zenodo 
+[![Dataset on HF](https://huggingface.co/datasets/huggingface/badges/resolve/main/dataset-on-hf-sm.svg)](https://huggingface.co/datasets/weiventee/Repository_for_Orthosteric_and_Allosteric_Design)
+[![Visualize this dataset](https://huggingface.co/datasets/huggingface/badges/resolve/main/visualize-this-dataset-sm.svg)](https://huggingface.co/spaces/weiventee/Repository_for_Orthosteric_and_Allosteric_Design)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21901988.svg)](https://doi.org/10.5281/zenodo.21901988)
+
+Please cite the following Open Access paper if you are using ROAD:<br>
+[Protein Science 35:e70845 (2026)](https://onlinelibrary.wiley.com/doi/full/10.1002/pro.70845); doi: [10.1002/pro.70845](https://doi.org/10.1002/pro.70845)
+<br><br>
 
 <img src="images/top_groups_distances.png" alt="ROAD overview" width="850" align="center">
 
 <br> The left figure depicts the distribution of allosteric and active sites across the largest functional clusters. First, proteins were grouped by EC subclass (grey circles). To define ligand-binding locations within individual proteins (white circles), binding sites from all corresponding crystal structures were mapped onto the protein sequence. Sites with identical or substantially overlapping residues were then clustered into distinct locations (colored circles). Mean pairwise ligand similarity (ECFP4 Tanimoto) per location is indicated by red–orange (allosteric) and purple–blue (orthosteric) color scales. On the right, the minimum distance to an active site residue (dmin, Å) is plotted against total chain length for each allosteric site, colored by oligomeric state.
 
-Below: Characterization of allosteric/orthosteric sites (left) and ligands (right). See the paper TODO for more details.
+Below: Characterization of allosteric/orthosteric sites (left) and ligands (right). See the [paper](https://onlinelibrary.wiley.com/doi/full/10.1002/pro.70845) for more details.
 <img src="images/characteristics.png" alt="ROAD overview" width="850" align="center">
 <br clear="left">
 
@@ -169,8 +175,7 @@ python run_analysis_pipeline.py --force                   # force re-run
 <br>
 
 ## Citation
-*TODO*
-See `CITATION.txt`.
+Tee W-V, Raechell, Berezovsky IN. On the Road from Orthosteric to Allosteric Drugs: The ROAD database of allosteric and orthosteric sites and ligands. Protein Science. 2026; 35(12):e70845. https://doi.org/10.1002/pro.70845. See `CITATION.txt`.
 
 <br>
 
